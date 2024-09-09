@@ -1,0 +1,53 @@
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { ApiResponse, FetchDeleteHook } from "../types/http_methods";
+import api from "./Api";
+import { setLoading } from "../redux-store/features/global/loading";
+import { setAlert } from "../redux-store/features/custom-alert/customAlert";
+
+const useFetch_DELETE = (): FetchDeleteHook => {
+  const dispatch = useDispatch();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [data, setData] = useState<any>(null);
+
+  // Method for DELETE request
+  const deleteData = async (url: string): Promise<void> => {
+    setIsLoading(true);
+    dispatch(setLoading(true));
+
+    try {
+      const response: ApiResponse = await api.delete(url);
+      setData(response?.data);
+      setError(null); // Clear previous errors
+      dispatch(setAlert({ message: "Item deleted successfully", type: "success" }));
+    } catch (error: any) {
+      if (error?.response) {
+        if (error.response.status === 404) {
+          // Handle 404 error
+          dispatch(setAlert({ message: "Resource not found", type: "error" }));
+          setError(new Error("Resource not found"));
+        } else if (error.response.status >= 500) {
+          // Handle 5xx errors
+          dispatch(setAlert({ message: "Server error, please try again later", type: "error" }));
+          setError(new Error("Server error, please try again later"));
+        } else {
+          // Handle other HTTP errors
+          dispatch(setAlert({ message: "An unexpected error occurred", type: "error" }));
+          setError(new Error("An unexpected error occurred"));
+        }
+      } else {
+        // Network or other errors
+        dispatch(setAlert({ message: "Network error, please check your connection", type: "error" }));
+        setError(new Error("Network error, please check your connection"));
+      }
+    } finally {
+      setIsLoading(false);
+      dispatch(setLoading(false));
+    }
+  };
+
+  return { isLoading, error, data, deleteData };
+};
+
+export default useFetch_DELETE;
