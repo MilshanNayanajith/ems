@@ -68,7 +68,7 @@ const EmployeeDetails = ({
     if (deleted) {
       deleteFunc(employee.empNo);
       closeFunc();
-      dispatch(setAlert({ message: `Employee ${data.empName} is deleted.`, type: "success" }));
+      dispatch(setAlert({ message: `Employee ${deleted.empName} is deleted.`, type: "success" }));
     }
   }, [deleted]);
 
